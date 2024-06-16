@@ -19,6 +19,3 @@ COPY . ./
 # Install any needed packages specified in package.json
 RUN npm install
 RUN npm run test:coverage
-
-# Run a command that never exits
-CMD ["tail", "-f", "/dev/null"]
