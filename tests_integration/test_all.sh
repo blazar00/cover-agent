@@ -47,33 +47,42 @@ if [ "$RUN_INSTALLER" = true ]; then
     docker run --rm --user $USER_ID:$GROUP_ID --volume "$(pwd)/dist:/app/dist" cover-agent-installer
 fi
 
-# Python FastAPI Example
+# # Python FastAPI Example
+# sh tests_integration/test_with_docker.sh \
+#   --dockerfile "templated_tests/python_fastapi/Dockerfile" \
+#   --source-file-path "app.py" \
+#   --test-file-path "test_app.py" \
+#   --test-command "pytest --cov=. --cov-report=xml --cov-report=term" \
+#   --model $MODEL
+
+# # Go Webservice Example
+# # Note: GPT 3.5 hasn't been powerful enough to generate quality tests that pass
+# sh tests_integration/test_with_docker.sh \
+#   --dockerfile "templated_tests/go_webservice/Dockerfile" \
+#   --source-file-path "app.go" \
+#   --test-file-path "app_test.go" \
+#   --test-command "go test -coverprofile=coverage.out && gocov convert coverage.out | gocov-xml > coverage.xml" \
+#   --model "gpt-4o"
+
+# # Java Gradle example
+# # Note: GPT 3.5 hasn't been powerful enough to generate quality tests that pass
+# sh tests_integration/test_with_docker.sh \
+#   --dockerfile "templated_tests/java_gradle/Dockerfile" \
+#   --source-file-path "src/main/java/com/davidparry/cover/SimpleMathOperations.java" \
+#   --test-file-path "src/test/groovy/com/davidparry/cover/SimpleMathOperationsSpec.groovy" \
+#   --test-command "./gradlew clean test jacocoTestReport" \
+#   --coverage-type "jacoco" \
+#   --code-coverage-report-path "build/reports/jacoco/test/jacocoTestReport.csv" \
+#   --model "gpt-4o"
+
+# VanillaJS Example
 sh tests_integration/test_with_docker.sh \
-  --dockerfile "templated_tests/python_fastapi/Dockerfile" \
-  --source-file-path "app.py" \
-  --test-file-path "test_app.py" \
-  --test-command "pytest --cov=. --cov-report=xml --cov-report=term" \
+  --dockerfile "templated_tests/js_vanilla/Dockerfile" \
+  --source-file-path "ui.js" \
+  --test-file-path "ui.test.js" \
+  --test-command "npm run test:coverage" \
+  --code-coverage-report-path "coverage/coverage.xml" \
   --model $MODEL
-
-# Go Webservice Example
-# Note: GPT 3.5 hasn't been powerful enough to generate quality tests that pass
-sh tests_integration/test_with_docker.sh \
-  --dockerfile "templated_tests/go_webservice/Dockerfile" \
-  --source-file-path "app.go" \
-  --test-file-path "app_test.go" \
-  --test-command "go test -coverprofile=coverage.out && gocov convert coverage.out | gocov-xml > coverage.xml" \
-  --model "gpt-4o"
-
-# Java Gradle example
-# Note: GPT 3.5 hasn't been powerful enough to generate quality tests that pass
-sh tests_integration/test_with_docker.sh \
-  --dockerfile "templated_tests/java_gradle/Dockerfile" \
-  --source-file-path "src/main/java/com/davidparry/cover/SimpleMathOperations.java" \
-  --test-file-path "src/test/groovy/com/davidparry/cover/SimpleMathOperationsSpec.groovy" \
-  --test-command "./gradlew clean test jacocoTestReport" \
-  --coverage-type "jacoco" \
-  --code-coverage-report-path "build/reports/jacoco/test/jacocoTestReport.csv" \
-  --model "gpt-4o"
 
 # # Java Spring Calculator example
 # sh tests_integration/test_with_docker.sh \
