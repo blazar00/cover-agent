@@ -109,3 +109,12 @@ sh tests_integration/test_with_docker.sh \
   --test-file-path "test_app.py" \
   --test-command "pytest --cov=. --cov-report=xml --cov-report=term" \
   --model "gpt-3.5-turbo"
+
+# TypeScript Calculator Example
+sh tests_integration/test_with_docker.sh \
+  --dockerfile "templated_tests/typescript_calculator/Dockerfile" \
+  --source-file-path "src/modules/Calculator.ts" \
+  --test-file-path "tests/Calculator.test.ts" \
+  --test-command "npm run test" \
+  --code-coverage-report-path "coverage/cobertura-coverage.xml" \
+  --model "gpt-3.5-turbo"
