@@ -194,7 +194,6 @@ class CoverageProcessor:
 
         lines_covered, lines_missed = [], []
         filename = os.path.basename(self.src_file_path)
-        print(f"filename: {filename}")
         try: 
             with open(self.file_path, "r") as file:
                 for line in file:
@@ -206,7 +205,6 @@ class CoverageProcessor:
                                 if line.startswith("DA:"):
                                     line_number = line.replace("DA:", "").split(",")[0]
                                     hits = line.replace("DA:", "").split(",")[1]
-                                    print(f"line_number: {line_number}, hits: {hits}")
                                     if int(hits) > 0:
                                         lines_covered.append(int(line_number))
                                     else:
