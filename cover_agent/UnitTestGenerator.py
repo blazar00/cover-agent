@@ -72,6 +72,7 @@ class UnitTestGenerator:
         self.failed_test_runs = []
         self.total_input_token_count = 0
         self.total_output_token_count = 0
+        self.current_coverage = 0.0
 
         # Run coverage and build the prompt
         self.run_coverage()
@@ -579,15 +580,15 @@ class UnitTestGenerator:
             generated_test, "Test failed", stderr, stdout, exit_code, error_message
         )
         self.failed_test_runs.append(fail_details)
-        self.log_failure(
-            test_name=generated_test.get("test_name"),
-            prompt=self.prompt,
-            error=fail_details["reason"],
-            stack_trace=stderr,
-            generated_code=generated_test.get("test_code"),
-            input_data=generated_test.get("input_data"),
-            env_details=self.get_environment_details(),
-        )
+        # self.log_failure(
+        #     test_name=generated_test.get("test_name"),
+        #     prompt=self.prompt,
+        #     error=fail_details["reason"],
+        #     stack_trace=stderr,
+        #     generated_code=generated_test.get("test_code"),
+        #     input_data=generated_test.get("input_data"),
+        #     env_details=self.get_environment_details(),
+        # )
         self.log_wandb_failure(fail_details)
         return fail_details
 
@@ -642,15 +643,15 @@ class UnitTestGenerator:
             "did not increase code coverage",
         )
         self.failed_test_runs.append(fail_details)
-        self.log_failure(
-            test_name=generated_test.get("test_name"),
-            prompt=self.prompt,
-            error=fail_details["reason"],
-            stack_trace=stderr,
-            generated_code=generated_test.get("test_code"),
-            input_data=generated_test.get("input_data"),
-            env_details=self.get_environment_details(),
-        )
+        # self.log_failure(
+        #     test_name=generated_test.get("test_name"),
+        #     prompt=self.prompt,
+        #     error=fail_details["reason"],
+        #     stack_trace=stderr,
+        #     generated_code=generated_test.get("test_code"),
+        #     input_data=generated_test.get("input_data"),
+        #     env_details=self.get_environment_details(),
+        # )
         self.log_wandb_failure(fail_details)
         return fail_details
 
@@ -685,15 +686,15 @@ class UnitTestGenerator:
             "coverage verification error",
         )
         self.failed_test_runs.append(fail_details)
-        self.log_failure(
-            test_name=generated_test.get("test_name"),
-            prompt=self.prompt,
-            error=fail_details["reason"],
-            stack_trace=stderr,
-            generated_code=generated_test.get("test_code"),
-            input_data=generated_test.get("input_data"),
-            env_details=self.get_environment_details(),
-        )
+        # self.log_failure(
+        #     test_name=generated_test.get("test_name"),
+        #     prompt=self.prompt,
+        #     error=fail_details["reason"],
+        #     stack_trace=stderr,
+        #     generated_code=generated_test.get("test_code"),
+        #     input_data=generated_test.get("input_data"),
+        #     env_details=self.get_environment_details(),
+        # )
         return fail_details
 
     def create_pass_response(self, generated_test, stderr, stdout, exit_code):
@@ -797,3 +798,29 @@ def extract_error_message_python(fail_message):
     except Exception as e:
         logging.error(f"Error extracting error message: {e}")
         return ""
+
+    def log_failure(
+        self,
+        test_name,
+        prompt,
+        error,
+        stack_trace,
+        generated_code,
+        input_data,
+        env_details,
+    ):
+        """
+        Log the details of a test failure.
+
+        Parameters:
+            test_name (str): The name of the test that failed.
+            prompt (str): The prompt used for test generation.
+            error (str): The error message from the failure.
+            stack_trace (str): The
+        
+        Returns:
+            None
+        """
+        self.logger.error(
+            f"Test failed: {test_name}\nPrompt: {prompt}\nError: {error}\nStack trace: {stack_trace}\nGenerated code: {generated_code}\nInput data: {input_data}\nEnvironment details: {env_details}"
+        )
