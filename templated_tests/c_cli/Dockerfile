@@ -16,5 +16,3 @@ RUN curl -L https://github.com/ThrowTheSwitch/Unity/archive/master.zip -o unity-
 
 # Copy project files
 COPY . /usr/src/myapp/
-
-# This is a test
