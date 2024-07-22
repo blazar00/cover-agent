@@ -32,9 +32,9 @@ jobs:
       - name: Build and push Docker image
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            changes_dirs=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }} | grep 'templated_tests/' | xargs -I {} dirname {} | sort -u)
+            changes_dirs=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }} | grep 'templated_tests/' | awk -F/ '{print $2}' | sort -u)
           elif [[ "${{ github.event_name }}" == "push" ]]; then
-            changes_dirs=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep 'templated_tests/' | xargs -I {} dirname {} | sort -u)
+            changes_dirs=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep 'templated_tests/' | awk -F/ '{print $2}' | sort -u)
           fi
           for dir in ${changes_dirs}; do
             echo "Building and pushing Docker images for the following directories: ${dir}"
