@@ -40,10 +40,10 @@ jobs:
             echo "Building and pushing Docker images for the following directories: ${dir}"
             image=${dir//\//_}
             if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-              docker build -t blazar00/$image:${{ steps.sha.outputs.short_sha }} $dir
+              docker build -t blazar00/$image:${{ steps.sha.outputs.short_sha }} ./templated_tests/$dir
               docker push blazar00/$image:${{ steps.sha.outputs.short_sha }}
             elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-              docker build -t blazar00/$image:latest $dir
+              docker build -t blazar00/$image:latest ./templated_tests/$dir
               docker push blazar00/$image:latest
             fi
           done
