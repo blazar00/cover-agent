@@ -137,3 +137,13 @@ sh tests_integration/test_with_docker.sh \
   --test-command "npm run test" \
   --code-coverage-report-path "coverage/cobertura-coverage.xml" \
   --model $MODEL
+
+# React Calculator Example
+sh tests_integration/test_with_docker.sh \
+  --dockerfile "templated_tests/react_calculator/Dockerfile" \
+  --source-file-path "src/modules/Calculator.js" \
+  --test-file-path "src/tests/Calculator.test.js" \
+  --test-command "npm run test" \
+  --code-coverage-report-path "coverage/cobertura-coverage.xml" \
+  --desired-coverage "55" \
+  --model $MODEL
