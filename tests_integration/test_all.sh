@@ -145,4 +145,5 @@ sh tests_integration/test_with_docker.sh \
   --test-file-path "src/tests/Calculator.test.js" \
   --test-command "npm run test" \
   --code-coverage-report-path "coverage/cobertura-coverage.xml" \
+  --desired-coverage "55" \
   --model $MODEL
