@@ -11,17 +11,46 @@ on:
       - 'templated_tests/**'
 
 jobs:
-  update-docker-reference:
+  changed-files:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.changed-files.outputs.all_changed_files }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get short SHA
-        id: sha
-        run: echo "::set-output name=short_sha::$(git rev-parse --short ${{ github.event.pull_request.head.sha }})"
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          matrix: true
+          dir_names: true
+          files: |
+            templated_tests/**/*
+      
+      - name: List all changed files
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${ALL_CHANGED_FILES}; do
+            echo "$file was changed"
+          done
+
+  build-and-push-image:
+    needs: changed-files
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: 
+        files: ${{fromJson(needs.changed-files.outputs.matrix)}}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Log in to DockerHub
         uses: docker/login-action@v1
@@ -29,21 +58,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Get Docker image name
+        id: image_name
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            changes_dirs=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }} | grep 'templated_tests/' | awk -F/ '{print $2}' | sort -u)
-          elif [[ "${{ github.event_name }}" == "push" ]]; then
-            changes_dirs=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep 'templated_tests/' | awk -F/ '{print $2}' | sort -u)
-          fi
-          for dir in ${changes_dirs}; do
-            echo "Building and pushing Docker images for the following directories: ${dir}"
-            image=${dir//\//_}
-            if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-              docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/$image:${{ steps.sha.outputs.short_sha }} ./templated_tests/$dir
-              docker push ${{ secrets.DOCKERHUB_USERNAME }}/$image:${{ steps.sha.outputs.short_sha }}
-            elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-              docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/$image:latest ./templated_tests/$dir
-              docker push ${{ secrets.DOCKERHUB_USERNAME }}/$image:latest
-            fi
-          done
+          image_name=$(echo ${{ matrix.files }} | sed 's/templated_tests\///')
+          echo "::set-output name=image_name::${{ secrets.DOCKERHUB_USERNAME }}/$image_name"
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image_name.outputs.image_name }}
+          tags: |
+            type=raw,value={{sha}},event=pr
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image to DockerHub
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.files }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
