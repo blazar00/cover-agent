@@ -38,5 +38,3 @@ void print_usage() {
     printf("  --modulus:   Compute the modulus of the first number by the second. Example: ./calc --modulus 5 3 (Note: The second operand cannot be zero.)\n");
     printf("  --power:     Raise the first number to the power of the second. Example: ./calc --power 5 3\n");
 }
-
-// test

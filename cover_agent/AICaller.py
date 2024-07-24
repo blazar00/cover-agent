@@ -96,5 +96,3 @@ class AICaller:
             int(model_response["usage"]["prompt_tokens"]),
             int(model_response["usage"]["completion_tokens"]),
         )
-
-# test
