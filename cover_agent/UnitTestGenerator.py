@@ -13,6 +13,7 @@ from cover_agent.AICaller import AICaller
 from cover_agent.FilePreprocessor import FilePreprocessor
 from cover_agent.utils import load_yaml
 from cover_agent.settings.config_loader import get_settings
+from cover_agent.database.db import insert_attempt
 
 
 class UnitTestGenerator:
@@ -567,6 +568,17 @@ class UnitTestGenerator:
                         )
                         root_span.log(name="inference")
 
+                    # insert the failed test to the database
+                    insert_attempt(
+                        run_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        llm_info=self.to_json(),
+                        prompt=self.prompt,
+                        generated_test=generated_test,
+                        imports=additional_imports,
+                        stdout=stdout,
+                        stderr=stderr,
+                    )
+
                     return fail_details
 
                 # If test passed, check for coverage increase
@@ -739,3 +751,21 @@ def extract_error_message_python(fail_message):
     except Exception as e:
         logging.error(f"Error extracting error message: {e}")
         return ""
+
+    def to_dict(self):
+        return {
+            "source_file_path": self.source_file_path,
+            "test_file_path": self.test_file_path,
+            "code_coverage_report_path": self.code_coverage_report_path,
+            "test_command": self.test_command,
+            "llm_model": self.llm_model,
+            "api_base": self.api_base,
+            "test_command_dir": self.test_command_dir,
+            "included_files": self.included_files,
+            "coverage_type": self.coverage_type,
+            "desired_coverage": self.desired_coverage,
+            "additional_instructions": self.additional_instructions,
+        }
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
