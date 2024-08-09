@@ -61,6 +61,7 @@ class UnitTestGenerator:
         self.desired_coverage = desired_coverage
         self.additional_instructions = additional_instructions
         self.language = self.get_code_language(source_file_path)
+        self.llm_model = llm_model
 
         # Objects to instantiate
         self.ai_caller = AICaller(model=llm_model, api_base=api_base)
@@ -526,10 +527,10 @@ class UnitTestGenerator:
 
                     # insert the failed test to the database
                     insert_attempt(
-                        run_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        run_time=datetime.datetime.now(),
                         llm_info=self.to_json(),
-                        prompt=self.prompt,
-                        generated_test=generated_test,
+                        prompt=json.dumps(self.prompt),
+                        generated_test=test_code,
                         imports=additional_imports,
                         stdout=stdout,
                         stderr=stderr,
@@ -638,6 +639,23 @@ class UnitTestGenerator:
                 "test": generated_test,
             }
 
+    def to_dict(self):
+        return {
+            "source_file_path": self.source_file_path,
+            "test_file_path": self.test_file_path,
+            "code_coverage_report_path": self.code_coverage_report_path,
+            "test_command": self.test_command,
+            "llm_model": self.llm_model,
+            "test_command_dir": self.test_command_dir,
+            "included_files": self.included_files,
+            "coverage_type": self.coverage_type,
+            "desired_coverage": self.desired_coverage,
+            "additional_instructions": self.additional_instructions,
+        }
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
 
 def extract_error_message_python(fail_message):
     """
@@ -666,21 +684,3 @@ def extract_error_message_python(fail_message):
     except Exception as e:
         logging.error(f"Error extracting error message: {e}")
         return ""
-
-    def to_dict(self):
-        return {
-            "source_file_path": self.source_file_path,
-            "test_file_path": self.test_file_path,
-            "code_coverage_report_path": self.code_coverage_report_path,
-            "test_command": self.test_command,
-            "llm_model": self.llm_model,
-            "api_base": self.api_base,
-            "test_command_dir": self.test_command_dir,
-            "included_files": self.included_files,
-            "coverage_type": self.coverage_type,
-            "desired_coverage": self.desired_coverage,
-            "additional_instructions": self.additional_instructions,
-        }
-
-    def to_json(self):
-        return json.dumps(self.to_dict())
