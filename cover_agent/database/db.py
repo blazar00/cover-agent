@@ -12,9 +12,9 @@ class UnitTestGenerationAttempt(Base):
     id = Column(Integer, primary_key=True)
     run_time = Column(DateTime, default=datetime.utcnow)
     llm_info = Column(JSON)
-    prompt = Column(Text)
+    prompt = Column(JSON)
     generated_test = Column(Text)
-    imports = Column(JSON)
+    imports = Column(Text)
     stdout = Column(Text)
     stderr = Column(Text)
 
