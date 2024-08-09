@@ -118,6 +118,7 @@ sh tests_integration/test_with_docker.sh \
   --source-file-path "app.py" \
   --test-file-path "test_app.py" \
   --test-command "pytest --cov=. --cov-report=xml --cov-report=term" \
+  --desired-coverage "99" \
   --model "gpt-3.5-turbo"
 
 # React Calculator Example
