@@ -486,7 +486,7 @@ class UnitTestGenerator:
                 # Run the test command multiple times if num_attempts > 1
                 for i in range(num_attempts):
                     self.logger.info(
-                        f'Running test with the following command: "{self.test_command}" (Attempt {i + 1}/{num_attempts})'
+                        f'Running test with the following command: "{self.test_command}"'
                     )
                     stdout, stderr, exit_code, time_of_test_command = Runner.run_command(
                         command=self.test_command, cwd=self.test_command_dir
