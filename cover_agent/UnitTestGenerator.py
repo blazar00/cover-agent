@@ -32,6 +32,8 @@ class UnitTestGenerator:
         additional_instructions: str = "",
         use_report_coverage_feature_flag: bool = False,
         project_root: str = "",
+        diff_coverage: bool = False,
+        comparasion_branch: str = "main",
     ):
         """
         Initialize the UnitTestGenerator class with the provided parameters.
@@ -48,8 +50,8 @@ class UnitTestGenerator:
             coverage_type (str, optional): The type of coverage report. Defaults to "cobertura".
             desired_coverage (int, optional): The desired coverage percentage. Defaults to 90.
             additional_instructions (str, optional): Additional instructions for test generation. Defaults to an empty string.
-            use_report_coverage_feature_flag (bool, optional): Setting this to True considers the coverage of all the files in the coverage report. 
-                                                               This means we consider a test as good if it increases coverage for a different 
+            use_report_coverage_feature_flag (bool, optional): Setting this to True considers the coverage of all the files in the coverage report.
+                                                               This means we consider a test as good if it increases coverage for a different
                                                                file other than the source file. Defaults to False.
 
         Returns:
@@ -73,6 +75,12 @@ class UnitTestGenerator:
         self.use_report_coverage_feature_flag = use_report_coverage_feature_flag
         self.last_coverage_percentages = {}
         self.llm_model = llm_model
+        self.diff_coverage = diff_coverage
+        self.comparasion_branch = comparasion_branch
+
+        # Override covertype to be 'diff' if diff_coverage is enabled
+        if self.diff_coverage:
+            self.coverage_type = "json_diff"
 
         # Objects to instantiate
         self.ai_caller = AICaller(model=llm_model, api_base=api_base)
@@ -99,7 +107,6 @@ class UnitTestGenerator:
         Returns:
             None
         """
-        # Run coverage and build the prompt
         self.run_coverage()
         self.prompt = self.build_prompt()
 
@@ -159,12 +166,18 @@ class UnitTestGenerator:
             exit_code == 0
         ), f'Fatal: Error running test command. Are you sure the command is correct? "{self.test_command}"\nExit code {exit_code}. \nStdout: \n{stdout} \nStderr: \n{stderr}'
 
+        if self.diff_coverage:
+            self.logger.info("Diff coverage enabled. Skipping coverage processing.")
+            report_file_path = self.generate_diff_coverage_report()
+        else:
+            report_file_path = self.code_coverage_report_path
+
         # Instantiate CoverageProcessor and process the coverage report
         coverage_processor = CoverageProcessor(
-            file_path=self.code_coverage_report_path,
+            file_path=report_file_path,
             src_file_path=self.source_file_path,
             coverage_type=self.coverage_type,
-            use_report_coverage_feature_flag=self.use_report_coverage_feature_flag
+            use_report_coverage_feature_flag=self.use_report_coverage_feature_flag,
         )
 
         # Use the process_coverage_report method of CoverageProcessor, passing in the time the test command was executed
@@ -180,34 +193,40 @@ class UnitTestGenerator:
                 total_lines_missed = 0
                 total_lines = 0
                 for key in file_coverage_dict:
-                    lines_covered, lines_missed, percentage_covered = (
-                        file_coverage_dict[key]
-                    )
+                    (
+                        lines_covered,
+                        lines_missed,
+                        percentage_covered,
+                    ) = file_coverage_dict[key]
                     total_lines_covered += len(lines_covered)
                     total_lines_missed += len(lines_missed)
                     total_lines += len(lines_covered) + len(lines_missed)
                     if key == self.source_file_path:
                         self.last_source_file_coverage = percentage_covered
                     if key not in self.last_coverage_percentages:
-                        self.last_coverage_percentages[key] =  0
+                        self.last_coverage_percentages[key] = 0
                     self.last_coverage_percentages[key] = percentage_covered
                 try:
                     percentage_covered = total_lines_covered / total_lines
                 except ZeroDivisionError:
-                    self.logger.error(f"ZeroDivisionError: Attempting to perform total_lines_covered / total_lines: {total_lines_covered} / {total_lines}.")
+                    self.logger.error(
+                        f"ZeroDivisionError: Attempting to perform total_lines_covered / total_lines: {total_lines_covered} / {total_lines}."
+                    )
                     percentage_covered = 0
 
                 self.logger.info(
                     f"Total lines covered: {total_lines_covered}, Total lines missed: {total_lines_missed}, Total lines: {total_lines}"
                 )
-                self.logger.info(    
+                self.logger.info(
                     f"coverage: Percentage {round(percentage_covered * 100, 2)}%"
                 )
             else:
-                lines_covered, lines_missed, percentage_covered = (
-                    coverage_processor.process_coverage_report(
-                        time_of_test_command=time_of_test_command
-                    )
+                (
+                    lines_covered,
+                    lines_missed,
+                    percentage_covered,
+                ) = coverage_processor.process_coverage_report(
+                    time_of_test_command=time_of_test_command
                 )
 
             # Process the extracted coverage metrics
@@ -339,6 +358,16 @@ class UnitTestGenerator:
                 response, prompt_token_count, response_token_count = (
                     self.ai_caller.call_model(prompt=prompt_headers_indentation)
                 )
+                self.ai_caller.model = (
+                    "gpt-4o"
+                    if self.llm_model in ["o1-preview", "o1-mini"]
+                    else self.llm_model
+                )  # Exception for OpenAI's new reasoning engines
+                (
+                    response,
+                    prompt_token_count,
+                    response_token_count,
+                ) = self.ai_caller.call_model(prompt=prompt_headers_indentation)
                 self.ai_caller.model = self.llm_model
                 self.total_input_token_count += prompt_token_count
                 self.total_output_token_count += response_token_count
@@ -365,6 +394,16 @@ class UnitTestGenerator:
                 response, prompt_token_count, response_token_count = (
                     self.ai_caller.call_model(prompt=prompt_test_insert_line)
                 )
+                self.ai_caller.model = (
+                    "gpt-4o"
+                    if self.llm_model in ["o1-preview", "o1-mini"]
+                    else self.llm_model
+                )  # Exception for OpenAI's new reasoning engines
+                (
+                    response,
+                    prompt_token_count,
+                    response_token_count,
+                ) = self.ai_caller.call_model(prompt=prompt_test_insert_line)
                 self.ai_caller.model = self.llm_model
                 self.total_input_token_count += prompt_token_count
                 self.total_output_token_count += response_token_count
@@ -415,6 +454,10 @@ class UnitTestGenerator:
         self.prompt = self.build_prompt()
         response, prompt_token_count, response_token_count =  self.ai_caller.call_model(prompt=self.prompt)
 
+        stream = False if self.llm_model in ["o1-preview", "o1-mini"] else True
+        response, prompt_token_count, response_token_count = self.ai_caller.call_model(
+            prompt=self.prompt, max_tokens=max_tokens, stream=stream
+        )
         self.total_input_token_count += prompt_token_count
         self.total_output_token_count += response_token_count
         try:
@@ -546,12 +589,16 @@ class UnitTestGenerator:
                     self.logger.info(
                         f'Running test with the following command: "{self.test_command}"'
                     )
-                    stdout, stderr, exit_code, time_of_test_command = Runner.run_command(
+                    (
+                        stdout,
+                        stderr,
+                        exit_code,
+                        time_of_test_command,
+                    ) = Runner.run_command(
                         command=self.test_command, cwd=self.test_command_dir
                     )
                     if exit_code != 0:
                         break
-                
 
                 # Step 3: Check for pass/fail from the Runner object
                 if exit_code != 0:
@@ -573,7 +620,9 @@ class UnitTestGenerator:
                         "processed_test_file": processed_test,
                     }
 
-                    error_message = self.extract_error_message(stderr=fail_details["stderr"], stdout=fail_details["stdout"])
+                    error_message = self.extract_error_message(
+                        stderr=fail_details["stderr"], stdout=fail_details["stdout"]
+                    )
                     if error_message:
                         logging.error(f"Error message summary:\n{error_message}")
 
@@ -596,9 +645,18 @@ class UnitTestGenerator:
 
                 # If test passed, check for coverage increase
                 try:
+                    # Check if diff_coverage is enabled and generate the diff coverage report
+                    if self.diff_coverage:
+                        self.logger.info(
+                            "Diff coverage enabled. Skipping coverage processing."
+                        )
+                        report_file_path = self.generate_diff_coverage_report()
+                    else:
+                        report_file_path = self.code_coverage_report_path
+
                     # Step 4: Check that the coverage has increased using the CoverageProcessor class
                     new_coverage_processor = CoverageProcessor(
-                        file_path=self.code_coverage_report_path,
+                        file_path=report_file_path,
                         src_file_path=self.source_file_path,
                         coverage_type=self.coverage_type,
                         use_report_coverage_feature_flag=self.use_report_coverage_feature_flag,
@@ -609,16 +667,20 @@ class UnitTestGenerator:
                         self.logger.info(
                             "Using the report coverage feature flag to process the coverage report"
                         )
-                        file_coverage_dict = new_coverage_processor.process_coverage_report(
-                            time_of_test_command=time_of_test_command
+                        file_coverage_dict = (
+                            new_coverage_processor.process_coverage_report(
+                                time_of_test_command=time_of_test_command
+                            )
                         )
                         total_lines_covered = 0
                         total_lines_missed = 0
                         total_lines = 0
                         for key in file_coverage_dict:
-                            lines_covered, lines_missed, percentage_covered = (
-                                file_coverage_dict[key]
-                            )
+                            (
+                                lines_covered,
+                                lines_missed,
+                                percentage_covered,
+                            ) = file_coverage_dict[key]
                             total_lines_covered += len(lines_covered)
                             total_lines_missed += len(lines_missed)
                             total_lines += len(lines_covered) + len(lines_missed)
@@ -628,10 +690,12 @@ class UnitTestGenerator:
 
                         new_percentage_covered = total_lines_covered / total_lines
                     else:
-                        _, _, new_percentage_covered = (
-                            new_coverage_processor.process_coverage_report(
-                                time_of_test_command=time_of_test_command
-                            )
+                        (
+                            _,
+                            _,
+                            new_percentage_covered,
+                        ) = new_coverage_processor.process_coverage_report(
+                            time_of_test_command=time_of_test_command
                         )
 
                     if new_percentage_covered <= self.current_coverage:
@@ -713,11 +777,16 @@ class UnitTestGenerator:
                 for key in coverage_percentages:
                     if key not in self.last_coverage_percentages:
                         self.last_coverage_percentages[key] = 0
-                    if coverage_percentages[key] > self.last_coverage_percentages[key] and key == self.source_file_path.split("/")[-1]:
+                    if (
+                        coverage_percentages[key] > self.last_coverage_percentages[key]
+                        and key == self.source_file_path.split("/")[-1]
+                    ):
                         self.logger.info(
                             f"Coverage for provided source file: {key} increased from {round(self.last_coverage_percentages[key] * 100, 2)} to {round(coverage_percentages[key] * 100, 2)}"
                         )
-                    elif coverage_percentages[key] > self.last_coverage_percentages[key]:
+                    elif (
+                        coverage_percentages[key] > self.last_coverage_percentages[key]
+                    ):
                         self.logger.info(
                             f"Coverage for non-source file: {key} increased from {round(self.last_coverage_percentages[key] * 100, 2)} to {round(coverage_percentages[key] * 100, 2)}"
                         )
@@ -772,14 +841,13 @@ class UnitTestGenerator:
     def to_json(self):
         return json.dumps(self.to_dict())
 
-
     def extract_error_message(self, stderr, stdout):
         """
         Extracts the error message from the provided stderr and stdout outputs.
 
         Updates the PromptBuilder object with the stderr and stdout, builds a custom prompt for analyzing test run failures,
         calls the language model to analyze the prompt, and loads the response into a dictionary.
-        
+
         Returns the error summary from the loaded YAML data or a default error message if unable to summarize.
         Logs errors encountered during the process.
 
@@ -801,18 +869,51 @@ class UnitTestGenerator:
             )
 
             # Run the analysis via LLM
-            response, prompt_token_count, response_token_count = (
-                self.ai_caller.call_model(prompt=prompt_headers_indentation, stream=False)
+            self.ai_caller.model = (
+                "gpt-4o"
+                if self.llm_model in ["o1-preview", "o1-mini"]
+                else self.llm_model
+            )  # Exception for OpenAI's new reasoning engines
+            (
+                response,
+                prompt_token_count,
+                response_token_count,
+            ) = self.ai_caller.call_model(
+                prompt=prompt_headers_indentation, stream=False
             )
+            self.ai_caller.model = self.llm_model  # Reset
             self.total_input_token_count += prompt_token_count
             self.total_output_token_count += response_token_count
             tests_dict = load_yaml(response)
-            if tests_dict.get("error_summary"):
-                output_str = tests_dict.get("error_summary")
-            else:
-                output_str = f"ERROR: Unable to summarize error message from inputs. STDERR: {stderr}\nSTDOUT: {stdout}."
-            return output_str
+
+            return tests_dict.get(
+                "error_summary",
+                f"ERROR: Unable to summarize error message from inputs. STDERR: {stderr}\nSTDOUT: {stdout}.",
+            )
         except Exception as e:
-            logging.error(f"ERROR: Unable to extract error message from inputs using LLM.\nSTDERR: {stderr}\nSTDOUT: {stdout}")
+            logging.error(
+                f"ERROR: Unable to extract error message from inputs using LLM.\nSTDERR: {stderr}\nSTDOUT: {stdout}"
+            )
             logging.error(f"Error extracting error message: {e}")
             return ""
+
+    def generate_diff_coverage_report(self):
+        # Run the diff-cover command to generate a JSON diff coverage report
+        coverage_filename = os.path.basename(self.code_coverage_report_path)
+        coverage_command = f"diff-cover --json-report diff-cover-report.json --compare-branch={self.comparasion_branch} {coverage_filename}"
+        report_file_path = f"{self.test_command_dir}/diff-cover-report.json"
+
+        # Log and execute the diff coverage command
+        self.logger.info(f'Running diff coverage command: "{coverage_command}"')
+        stdout, stderr, exit_code, _ = Runner.run_command(
+            command=coverage_command, cwd=self.test_command_dir
+        )
+
+        # Ensure the diff command executed successfully
+        assert exit_code == 0, (
+            f'Fatal: Error running diff coverage command. Are you sure the command is correct? "{coverage_command}"'
+            f"\nExit code {exit_code}. \nStdout: \n{stdout} \nStderr: \n{stderr}"
+        )
+
+        # Return the path to the diff coverage report file
+        return report_file_path

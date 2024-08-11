@@ -9,6 +9,7 @@ from cover_agent.ReportGenerator import ReportGenerator
 from cover_agent.UnitTestGenerator import UnitTestGenerator
 from cover_agent.UnitTestDB import UnitTestDB
 
+
 class CoverAgent:
     def __init__(self, args):
         """
@@ -40,6 +41,8 @@ class CoverAgent:
             llm_model=args.model,
             api_base=args.api_base,
             use_report_coverage_feature_flag=args.use_report_coverage_feature_flag,
+            diff_coverage=args.diff_coverage,
+            comparasion_branch=args.branch,
         )
 
     def _validate_paths(self):
@@ -70,7 +73,9 @@ class CoverAgent:
         if not self.args.log_db_path:
             self.args.log_db_path = "cover_agent_unit_test_runs.db"
         # Connect to the test DB
-        self.test_db = UnitTestDB(db_connection_string=f"sqlite:///{self.args.log_db_path}")
+        self.test_db = UnitTestDB(
+            db_connection_string=f"sqlite:///{self.args.log_db_path}"
+        )
 
     def _duplicate_test_file(self):
         """
@@ -132,9 +137,14 @@ class CoverAgent:
             and iteration_count < self.args.max_iterations
         ):
             # Log the current coverage
-            self.logger.info(
-                f"Current Coverage: {round(self.test_gen.current_coverage * 100, 2)}%"
-            )
+            if self.args.diff_coverage:
+                self.logger.info(
+                    f"Current Diff Coverage: {round(self.test_gen.current_coverage * 100, 2)}%"
+                )
+            else:
+                self.logger.info(
+                    f"Current Coverage: {round(self.test_gen.current_coverage * 100, 2)}%"
+                )
             self.logger.info(f"Desired Coverage: {self.test_gen.desired_coverage}%")
 
             # Generate new tests
@@ -165,7 +175,10 @@ class CoverAgent:
                 f"Reached above target coverage of {self.test_gen.desired_coverage}% (Current Coverage: {round(self.test_gen.current_coverage * 100, 2)}%) in {iteration_count} iterations."
             )
         elif iteration_count == self.args.max_iterations:
-            failure_message = f"Reached maximum iteration limit without achieving desired coverage. Current Coverage: {round(self.test_gen.current_coverage * 100, 2)}%"
+            if self.args.diff_coverage:
+                failure_message = f"Reached maximum iteration limit without achieving desired diff coverage. Current Coverage: {round(self.test_gen.diff_coverage_percentage * 100, 2)}%"
+            else:
+                failure_message = f"Reached maximum iteration limit without achieving desired coverage. Current Coverage: {round(self.test_gen.current_coverage * 100, 2)}%"
             if self.args.strict_coverage:
                 # User requested strict coverage (similar to "--cov-fail-under in pytest-cov"). Fail with exist code 2.
                 self.logger.error(failure_message)
