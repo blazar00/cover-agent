@@ -16,11 +16,13 @@ COVERAGE_TYPE="cobertura"
 CODE_COVERAGE_REPORT_PATH="coverage.xml"
 MAX_ITERATIONS=3  # Default value
 DESIRED_COVERAGE=70  # Default value
+LOG_DB_PATH="test_runs.db"
 
 # Function to clean up Docker container
 cleanup() {
   if [ -n "$CONTAINER_ID" ]; then
     echo "Cleaning up..."
+    docker cp "$CONTAINER_ID":/usr/src/myapp/"$LOG_DB_PATH" .
     docker stop "$CONTAINER_ID" || true
     docker rm "$CONTAINER_ID" || true
   fi

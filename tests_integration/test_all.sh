@@ -52,7 +52,7 @@ sh tests_integration/test_with_docker.sh \
   --test-command "sh build_and_test_with_coverage.sh" \
   --coverage-type "lcov" \
   --max-iterations "4" \
-  --desired-coverage "50" \
+  --desired-coverage "70" \
   --model $MODEL
 
 # C++ Calculator Example
