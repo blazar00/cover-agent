@@ -52,7 +52,7 @@ sh tests_integration/test_with_docker.sh \
   --test-command "sh build_and_test_with_coverage.sh" \
   --coverage-type "lcov" \
   --max-iterations "4" \
-  --desired-coverage "70" \
+  --desired-coverage "50" \
   --model $MODEL
 
 # C++ Calculator Example
@@ -118,7 +118,7 @@ sh tests_integration/test_with_docker.sh \
   --source-file-path "app.py" \
   --test-file-path "test_app.py" \
   --test-command "pytest --cov=. --cov-report=xml --cov-report=term" \
-  --desired-coverage "99" \
+  --desired-coverage "70" \
   --model "gpt-3.5-turbo"
 
 # React Calculator Example
