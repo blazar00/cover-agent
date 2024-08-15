@@ -1,3 +1,5 @@
+import os
+
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, Text, JSON, DateTime
 from sqlalchemy.ext.declarative import declarative_base
