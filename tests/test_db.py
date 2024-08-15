@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from cover_agent.database.db import Base, UnitTestGenerationAttempt, insert_attempt, select_all_attempts, select_attempt, select_attempt_in_range, select_attempt_flat
 
-DATABASE_URL = 'sqlite:///:memory:'
+DATABASE_URL = 'sqlite:///cover_agent.db'
 
 @pytest.fixture(scope='module')
 def test_session():
