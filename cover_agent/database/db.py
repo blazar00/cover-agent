@@ -18,8 +18,11 @@ class UnitTestGenerationAttempt(Base):
     stdout = Column(Text)
     stderr = Column(Text)
 
+# Get the database URL from the environment, default to a SQLite database
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///cover_agent.db')
+
 # Connect to the database
-engine = create_engine('sqlite:///test_runs.db')  # Replace with your DB connection string
+engine = create_engine(DATABASE_URL)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
