@@ -22,7 +22,6 @@ LOG_DB_PATH="test_runs.db"
 cleanup() {
   if [ -n "$CONTAINER_ID" ]; then
     echo "Cleaning up..."
-    docker cp "$CONTAINER_ID":/usr/src/myapp/"$LOG_DB_PATH" .
     docker stop "$CONTAINER_ID" || true
     docker rm "$CONTAINER_ID" || true
   fi
