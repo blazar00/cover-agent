@@ -4,6 +4,9 @@ import json
 import logging
 import os
 import re
+import json
+
+from wandb.sdk.data_types.trace_tree import Trace
 
 from cover_agent.AICaller import AICaller
 from cover_agent.CoverageProcessor import CoverageProcessor
@@ -13,6 +16,10 @@ from cover_agent.PromptBuilder import PromptBuilder
 from cover_agent.Runner import Runner
 from cover_agent.settings.config_loader import get_settings
 from cover_agent.utils import load_yaml
+
+import subprocess
+
+from bs4 import BeautifulSoup
 
 
 class UnitTestGenerator:
@@ -30,6 +37,7 @@ class UnitTestGenerator:
         desired_coverage: int = 90,  # Default to 90% coverage if not specified
         additional_instructions: str = "",
         use_report_coverage_feature_flag: bool = False,
+        mutation_testing: bool = False,
     ):
         """
         Initialize the UnitTestGenerator class with the provided parameters.
@@ -65,6 +73,7 @@ class UnitTestGenerator:
         self.additional_instructions = additional_instructions
         self.language = self.get_code_language(source_file_path)
         self.use_report_coverage_feature_flag = use_report_coverage_feature_flag
+        self.mutation_testing = mutation_testing
         self.last_coverage_percentages = {}
         self.llm_model = llm_model
 
@@ -213,7 +222,7 @@ class UnitTestGenerator:
                 "Will default to using the full coverage report. You will need to check coverage manually for each passing test."
             )
             with open(self.code_coverage_report_path, "r") as f:
-                self.code_coverage_report = f.read()
+                self.code_coverage_report = f.read()    
 
     @staticmethod
     def get_included_files(included_files):
@@ -296,6 +305,7 @@ class UnitTestGenerator:
             additional_instructions=self.additional_instructions,
             failed_test_runs=failed_test_runs_value,
             language=self.language,
+            mutation_testing=self.mutation_testing,
         )
 
         return self.prompt_builder.build_prompt()
