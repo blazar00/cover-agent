@@ -152,6 +152,8 @@ class CoverAgent:
                 # Run the coverage tool again if the desired coverage hasn't been reached
                 self.test_gen.run_coverage()
 
+            self.test_gen.run_mutations()
+
         # Log the final coverage
         if self.test_gen.current_coverage >= (self.test_gen.desired_coverage / 100):
             self.logger.info(

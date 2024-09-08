@@ -19,7 +19,7 @@ from cover_agent.utils import load_yaml
 
 import subprocess
 
-from bs4 import BeautifulSoup
+from shlex import split
 
 
 class UnitTestGenerator:
@@ -305,7 +305,6 @@ class UnitTestGenerator:
             additional_instructions=self.additional_instructions,
             failed_test_runs=failed_test_runs_value,
             language=self.language,
-            mutation_testing=self.mutation_testing,
         )
 
         return self.prompt_builder.build_prompt()
@@ -771,6 +770,92 @@ class UnitTestGenerator:
     def to_json(self):
         return json.dumps(self.to_dict())
 
+    def run_mutations(self):
+        self.logger.info("Running mutation tests")
+
+        # Run mutation tests
+
+        mutation_prompt_builder = PromptBuilder(
+            source_file_path=self.source_file_path,
+            test_file_path=self.test_file_path,
+            code_coverage_report=self.code_coverage_report,
+            included_files=self.included_files,
+            additional_instructions=self.additional_instructions,
+            failed_test_runs=self.failed_test_runs,
+            language=self.language,
+            mutation_testing=True
+        )
+
+        mutation_prompt = mutation_prompt_builder.build_prompt()
+
+        response, prompt_token_count, response_token_count = (
+            self.ai_caller.call_model(prompt=mutation_prompt)
+        )
+
+        mutation_dict = load_yaml(response)
+
+        for mutation in mutation_dict["mutants"]:
+            result = self.run_mutation(mutation)
+            self.logger.info(f"Mutation result: {result}")
+
+        
+    def run_mutation(self, mutation):
+        mutated_code = mutation.get("mutated_code", None)
+        line_number = mutation.get("line_number", None)
+
+         
+        # Read the original content
+        with open(self.source_file_path, "r") as source_file:
+            original_content = source_file.readlines()
+
+        # Determine the indentation level of the line at line_number
+        indentation = len(original_content[line_number]) - len(original_content[line_number].lstrip())
+
+        # Adjust the indentation of the mutated code
+        adjusted_mutated_code = [
+            '    ' * indentation + line if line.strip() else line
+            for line in mutated_code.split("\n")
+        ]
+
+        # Insert the mutated code at the specified spot
+        modified_content = (
+            original_content[:line_number - 1]
+            + adjusted_mutated_code
+            + original_content[line_number:]
+        )
+
+        # Write the modified content back to the file
+        with open(self.source_file_path, "w") as source_file:
+            source_file.writelines(modified_content)
+            source_file.flush()
+
+        # Step 2: Run the test using the Runner class
+        self.logger.info(
+            f'Running test with the following command: "{self.test_command}"'
+        )
+        stdout, stderr, exit_code, time_of_test_command = Runner.run_command(
+            command=self.test_command, cwd=self.test_command_dir
+        )
+
+        try:
+            result = subprocess.run(
+                split(self.test_command),
+                text=True,
+                capture_output=True,
+                cwd=self.test_command_dir,
+                timeout=30,
+            )
+        except subprocess.TimeoutExpired:
+            # Mutant Killed
+            result = subprocess.CompletedProcess(
+                self.test_command, 2, stdout="", stderr="TimeoutExpired",
+            )
+        finally:
+            # Write the modified content back to the file
+            with open(self.source_file_path, "w") as source_file:
+                source_file.writelines(original_content)
+                source_file.flush()
+        return result
 
 def extract_error_message_python(fail_message):
     """

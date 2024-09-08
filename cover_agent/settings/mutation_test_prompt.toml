@@ -3,7 +3,7 @@ system="""\
 """
 
 user="""\
-You are an AI mutation testing agent. Your task: mutate {{ language }} code to test robustness. Use the provided Abstract Syntax Tree (AST) for context. Read the AST before mutating.
+You are an AI mutation testing agent. Your task: mutate {{ language }} code to test robustness.
 
 Mutation Guidelines:
 1. Logic Modification:
@@ -83,31 +83,16 @@ class NewTests(BaseModel):
 
 Example output:
 ```yaml
-language: {{ language }}
-existing_test_function_signature: |
-  ...
-new_tests:
-- test_behavior: |
-    Test that the function returns the correct output for a single element list
-{%- if language in ["python","java"] %}
-  lines_to_cover: |
-    [1,2,5, ...]
-  test_name: |
-    test_single_element_list
-{%- else %}
-  test_name: |
-    ...
-{%- endif %}
-  test_code: |
-{%- if language in ["python"] %}
-    def ...
-{%- else %}
-    ...
-{%- endif %}
-  new_imports_code: |
-    ""
-  test_tags: happy path
-    ...
+source_file: {{source_file}}
+mutants:
+  - function_name: <function name>
+    type: <mutation type>
+    description: <brief mutation description>
+    line_number: <line number>
+    original_code: |
+      <original code>
+    mutated_code: |
+      <mutated code and {{language}} comment explaining mutation>
 ```
 
 Use block scalar('|') to format each YAML output.
