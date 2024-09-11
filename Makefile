@@ -46,4 +46,5 @@ local:
 		--coverage-type "cobertura" \
 		--desired-coverage 100 \
 		--max-iterations 1 \
-		--mutation-testing
+		--mutation-testing \
+		--more-mutation-logging

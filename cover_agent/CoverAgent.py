@@ -40,6 +40,7 @@ class CoverAgent:
             api_base=args.api_base,
             use_report_coverage_feature_flag=args.use_report_coverage_feature_flag,
             mutation_testing=args.mutation_testing,
+            more_mutation_logging=args.more_mutation_logging,
         )
 
     def _validate_paths(self):
@@ -152,7 +153,8 @@ class CoverAgent:
                 # Run the coverage tool again if the desired coverage hasn't been reached
                 self.test_gen.run_coverage()
 
-            self.test_gen.run_mutations()
+            if self.args.mutation_testing:
+                self.test_gen.run_mutations()
 
         # Log the final coverage
         if self.test_gen.current_coverage >= (self.test_gen.desired_coverage / 100):

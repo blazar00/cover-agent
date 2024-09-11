@@ -106,6 +106,11 @@ def parse_args():
         action="store_true",
         help="Setting this to True enables mutation testing. Default: False.",
     )
+    parser.add_argument(
+        "--more-mutation-logging",
+        action="store_true",
+        help="Setting this to True enables more logging. Default: False.",
+    )
     return parser.parse_args()
 
 

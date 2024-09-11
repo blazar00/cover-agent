@@ -38,6 +38,7 @@ class UnitTestGenerator:
         additional_instructions: str = "",
         use_report_coverage_feature_flag: bool = False,
         mutation_testing: bool = False,
+        more_mutation_logging: bool = False,
     ):
         """
         Initialize the UnitTestGenerator class with the provided parameters.
@@ -74,6 +75,7 @@ class UnitTestGenerator:
         self.language = self.get_code_language(source_file_path)
         self.use_report_coverage_feature_flag = use_report_coverage_feature_flag
         self.mutation_testing = mutation_testing
+        self.more_mutation_logging = more_mutation_logging
         self.last_coverage_percentages = {}
         self.llm_model = llm_model
 
@@ -796,7 +798,26 @@ class UnitTestGenerator:
 
         for mutation in mutation_dict["mutation"]:
             result = self.run_mutation(mutation)
-            self.logger.info(f"Mutation result: {result}")
+            
+            # Prepare the log message with banners
+            log_message = f"Mutation result (return code: {result.returncode}):\n"
+            if result.returncode == 0:
+                log_message += "Mutation survived.\n"
+            else:
+                log_message += "Mutation caught.\n"
+            
+            # Add STDOUT to the log message if it's not empty
+            if result.stdout.strip() and self.more_mutation_logging:
+                log_message += "\n" + "="*10 + " STDOUT " + "="*10 + "\n"
+                log_message += result.stdout
+            
+            # Add STDERR to the log message if it's not empty
+            if result.stderr.strip() and self.more_mutation_logging:
+                log_message += "\n" + "="*10 + " STDERR " + "="*10 + "\n"
+                log_message += result.stderr
+            
+
+            self.logger.info(log_message)
 
         
     def run_mutation(self, mutation):
