@@ -796,7 +796,7 @@ class UnitTestGenerator:
 
         mutation_dict = load_yaml(response)
 
-        for mutation in mutation_dict["mutation"]:
+        for mutation in mutation_dict["mutations"]:
             result = self.run_mutation(mutation)
             
             # Prepare the log message with banners
@@ -821,8 +821,8 @@ class UnitTestGenerator:
 
         
     def run_mutation(self, mutation):
-        mutated_code = mutation.get("mutation", None)
-        line_number = mutation.get("line", None)
+        mutated_code = mutation.get("mutated_version", None)
+        line_number = mutation.get("location", None)
 
          
         # Read the original content

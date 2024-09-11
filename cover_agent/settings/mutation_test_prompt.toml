@@ -64,16 +64,16 @@ Focus on subtle, realistic mutations that challenge the code's resilience while 
 
 Example output:
 ```yaml
-source: {{source_file}}
-mutation:
-  - function: <function name>
-    type: <mutation type>
-    description: <brief mutation description>
-    line: <line number>
-    original_code: |
+file: {{source_file}}
+mutations:
+  - method: <function name>
+    category: <mutation type>
+    summary: <brief mutation description>
+    location: <line number>
+    original: |
       <original code>
-    mutation: |
-      <mutated code and {{language}} comment explaining mutation>
+    mutated_version: |
+      <mutated code with {{language}} comment explaining the change>
 ```
 
 Use block scalar('|') to format each YAML output.
