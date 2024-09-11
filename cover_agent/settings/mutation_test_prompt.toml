@@ -3,96 +3,72 @@ system="""\
 """
 
 user="""\
-You are an AI mutation testing agent. Your task: mutate {{ language }} code to test robustness.
 
-Mutation Guidelines:
-1. Logic Modification:
-   - Alter conditions: e.g., 'if (a < b)' to 'if (a <= b)'
-   - Change loop boundaries
-   - Introduce calculation errors
-   Avoid: Infinite loops, excessive logic changes
+You are an AI mutation testing agent tasked with mutating {{ language }} code to evaluate its robustness.
 
-2. Output Alteration:
-   - Change return types
-   - Modify response structures
-   - Return corrupted data
+Mutation Strategy:
 
-3. Method Call Changes:
-   - Tamper with parameters
-   - Replace or remove critical functions
+1. Logic Tweaks:
+   Modify conditions (e.g., 'if (a < b)' to 'if (a <= b)')
+   Adjust loop boundaries
+   Introduce minor calculation errors
+   Avoid drastic changes or infinite loops.
 
-4. Failure Simulation:
-   - Inject exceptions
-   - Simulate resource failures
+2. Output Modifications:
+   Change return types or formats
+   Alter response structures
+   Return corrupted or incorrect data
 
-5. Data Handling Errors:
-   - Introduce parsing errors
-   - Bypass data validation
-   - Alter object states incorrectly
+3. Method Interference:
+   Alter function parameters
+   Replace or omit key method calls
 
-6. Boundary Testing:
-   - Use out-of-bounds indices
-   - Test with extreme parameter values
+4. Failure Injection:
+   Introduce exceptions or error states
+   Simulate system or resource failures
+
+5.Data Handling Faults:
+   Inject parsing errors
+   Bypass data validation
+   Corrupt object states
+
+6. Boundary Condition Testing:
+   Use out-of-bounds indices
+   Test extreme or edge-case parameters
 
 7. Concurrency Issues:
-   - Create race conditions
-   - Introduce potential deadlocks
-   - Simulate timeouts
+   Simulate race conditions or deadlocks
+   Introduce timeouts or delays
 
 8. Security Vulnerabilities:
-   - Replicate common CVE bugs (e.g., buffer overflow, SQL injection, XSS)
-   - Introduce authentication bypasses
-
-Apply mutations strategically. Focus on subtle changes that test code resilience without breaking core functionality. Aim for realistic scenarios that could occur due to programming errors or edge cases.
+   Replicate common vulnerabilities (e.g., buffer overflow, SQL injection, XSS)
+   Introduce authentication or authorization bypasses
 
 
-## Source Code to Mutate: {{ source_file_name }}
+Focus on subtle, realistic mutations that challenge the code's resilience while keeping core functionality intact. Prioritize scenarios likely to arise from programming errors or edge cases.
+
+
+## Source Code to add Mutations to: {{ source_file_name }}
 ```{{language}}
 {{ source_file_numbered }}
 ```
 
 ## Task
-1. Analyze the source code line by line.
-2. Generate mutations for each test
-3. Focus on function blocks and critical areas.
-4. Ensure mutations provide insights into code quality and test coverage.
-5. Organize output by ascending line numbers.
-6. Do not include manually added line numbers in your response.
-7. Generate single-line mutations only.
-
-## Response
-The output must be a YAML object equivalent to type $NewTests, according to the following Pydantic definitions:
-=====
-class SingleTest(BaseModel):
-    test_behavior: str = Field(description="Short description of the behavior the test covers")
-{%- if language in ["python","java"] %}
-    lines_to_cover: str = Field(description="A list of line numbers, currently uncovered, that this specific new test aims to cover")
-    test_name: str = Field(description=" A short test name, in snake case, that reflects the behaviour to test")
-{%- else %}
-    test_name: str = Field(description=" A short unique test name, that should reflect the test objective")
-{%- endif %}
-    test_code: str = Field(description="A single test function, that tests the behavior described in 'test_behavior'. The test should be a written like its a part of the existing test suite, if there is one, and it can use existing helper functions, setup, or teardown code.")
-    new_imports_code: str = Field(description="New imports that are required to run the new test function, and are not already imported in the test file. Give an empty string if no new imports are required. If relevant, add new imports as  'import ...' lines.")
-    test_tags: str = Field(description="A single label that best describes the test, out of: ['happy path', 'edge case','other']")
-
-class NewTests(BaseModel):
-    language: str = Field(description="The programming language of the source code")
-    existing_test_function_signature: str = Field(description="A single line repeating a signature header of one of the existing test functions")
-    new_tests: List[SingleTest] = Field(min_items=1, max_items={{ max_tests }}, description="A list of new test functions to append to the existing test suite, aiming to increase the code coverage. Each test should run as-is, without requiring any additional inputs or setup code. Don't introduce new dependencies")
-=====
+1. Conduct a line-by-line analysis of the source code.
+2. Generate mutations for each test case.
+3. Prioritize mutating function blocks and critical code sections.
+4. Ensure the mutations offer meaningful insights into code quality and test coverage.
+5. Present the output in order of ascending line numbers.
+6. Avoid including manually inserted line numbers in the response.
+7. Limit mutations to single-line changes only.
 
 Example output:
 ```yaml
-source_file: {{source_file}}
-mutants:
-  - function_name: <function name>
-    type: <mutation type>
-    description: <brief mutation description>
-    line_number: <line number>
-    original_code: |
-      <original code>
-    mutated_code: |
-      <mutated code and {{language}} comment explaining mutation>
+source: {{source_file}}
+mutation:
+    line: <line number>
+    mutation: |
+      <mutated code>
 ```
 
 Use block scalar('|') to format each YAML output.
@@ -100,5 +76,5 @@ Use block scalar('|') to format each YAML output.
 Response (should be a valid YAML, and nothing else):
 ```yaml
 
-Produce mutants that challenge the robustness of the code without breaking core functionality. Provide only the YAML output. Do not include any additional explanations or comments.
+Generate mutants that test the code’s resilience while preserving core functionality. Output only in YAML format, with no additional explanations or comments.
 """

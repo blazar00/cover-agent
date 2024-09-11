@@ -794,14 +794,14 @@ class UnitTestGenerator:
 
         mutation_dict = load_yaml(response)
 
-        for mutation in mutation_dict["mutants"]:
+        for mutation in mutation_dict["mutation"]:
             result = self.run_mutation(mutation)
             self.logger.info(f"Mutation result: {result}")
 
         
     def run_mutation(self, mutation):
-        mutated_code = mutation.get("mutated_code", None)
-        line_number = mutation.get("line_number", None)
+        mutated_code = mutation.get("mutation", None)
+        line_number = mutation.get("line", None)
 
          
         # Read the original content
@@ -845,11 +845,9 @@ class UnitTestGenerator:
                 cwd=self.test_command_dir,
                 timeout=30,
             )
-        except subprocess.TimeoutExpired:
-            # Mutant Killed
-            result = subprocess.CompletedProcess(
-                self.test_command, 2, stdout="", stderr="TimeoutExpired",
-            )
+        except Exception as e:
+            logging.error(f"Error running test command: {e}")
+            result = None
         finally:
             # Write the modified content back to the file
             with open(self.source_file_path, "w") as source_file:
