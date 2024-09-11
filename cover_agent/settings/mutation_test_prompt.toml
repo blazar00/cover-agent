@@ -66,9 +66,14 @@ Example output:
 ```yaml
 source: {{source_file}}
 mutation:
+  - function: <function name>
+    type: <mutation type>
+    description: <brief mutation description>
     line: <line number>
+    original_code: |
+      <original code>
     mutation: |
-      <mutated code>
+      <mutated code and {{language}} comment explaining mutation>
 ```
 
 Use block scalar('|') to format each YAML output.
