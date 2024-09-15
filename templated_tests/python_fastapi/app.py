@@ -19,7 +19,10 @@ async def current_date():
     """
     Get the current date as an ISO-formatted string.
     """
-return {"date": datetime.now().isoformat()}  # Added time to the date@app.get("/add/{num1}/{num2}")
+    return {"date": date.today().isoformat()}
+
+
+@app.get("/add/{num1}/{num2}")
 async def add(num1: int, num2: int):
     """
     An asynchronous function that takes two integer parameters 'num1' and 'num2', and returns a dictionary containing the result of adding 'num1' and 'num2' under the key 'result'.

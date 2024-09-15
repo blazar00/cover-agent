@@ -830,7 +830,7 @@ class UnitTestGenerator:
             original_content = source_file.readlines()
 
         # Determine the indentation level of the line at line_number
-        indentation = len(original_content[line_number]) - len(original_content[line_number].lstrip())
+        indentation = len(original_content[line_number - 1]) - len(original_content[line_number - 1].lstrip())
 
         # Adjust the indentation of the mutated code
         adjusted_mutated_code = [
@@ -853,9 +853,6 @@ class UnitTestGenerator:
         # Step 2: Run the test using the Runner class
         self.logger.info(
             f'Running test with the following command: "{self.test_command}"'
-        )
-        stdout, stderr, exit_code, time_of_test_command = Runner.run_command(
-            command=self.test_command, cwd=self.test_command_dir
         )
 
         try:
