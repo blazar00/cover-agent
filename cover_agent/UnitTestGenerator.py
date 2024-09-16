@@ -803,8 +803,10 @@ class UnitTestGenerator:
             log_message = f"Mutation result (return code: {result.returncode}):\n"
             if result.returncode == 0:
                 log_message += "Mutation survived.\n"
-            else:
+            elif result.returncode == 1:
                 log_message += "Mutation caught.\n"
+            else:
+                self.logger.error(f"Mutation test failed with return code {result.returncode}")
             
             # Add STDOUT to the log message if it's not empty
             if result.stdout.strip() and self.more_mutation_logging:
@@ -846,7 +848,7 @@ class UnitTestGenerator:
         # Insert the mutated code at the specified spot
         modified_content = (
             original_content[:line_number - 1]
-            + adjusted_mutated_code
+            + adjusted_mutated_code + ["\n"]
             + original_content[line_number:]
         )
 
