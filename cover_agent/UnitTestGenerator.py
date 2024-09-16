@@ -824,6 +824,11 @@ class UnitTestGenerator:
         mutated_code = mutation.get("mutated_version", None)
         line_number = mutation.get("location", None)
 
+        if not mutated_code or not line_number:
+            self.logger.error("Mutation does not contain mutated code or line number")
+            self.logger.error(f"Mutation: {mutation}")
+            return None
+
          
         # Read the original content
         with open(self.source_file_path, "r") as source_file:
@@ -834,7 +839,7 @@ class UnitTestGenerator:
 
         # Adjust the indentation of the mutated code
         adjusted_mutated_code = [
-            '    ' * indentation + line if line.strip() else line
+            ' ' * indentation + line if line.strip() else line
             for line in mutated_code.split("\n")
         ]
 
