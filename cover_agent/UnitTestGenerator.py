@@ -358,11 +358,6 @@ class UnitTestGenerator:
                 response, prompt_token_count, response_token_count = (
                     self.ai_caller.call_model(prompt=prompt_headers_indentation)
                 )
-                (
-                    response,
-                    prompt_token_count,
-                    response_token_count,
-                ) = self.ai_caller.call_model(prompt=prompt_headers_indentation)
                 self.ai_caller.model = self.llm_model
                 self.total_input_token_count += prompt_token_count
                 self.total_output_token_count += response_token_count
@@ -389,11 +384,6 @@ class UnitTestGenerator:
                 response, prompt_token_count, response_token_count = (
                     self.ai_caller.call_model(prompt=prompt_test_insert_line)
                 )
-                (
-                    response,
-                    prompt_token_count,
-                    response_token_count,
-                ) = self.ai_caller.call_model(prompt=prompt_test_insert_line)
                 self.ai_caller.model = self.llm_model
                 self.total_input_token_count += prompt_token_count
                 self.total_output_token_count += response_token_count

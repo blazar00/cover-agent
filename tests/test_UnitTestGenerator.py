@@ -251,7 +251,8 @@ class TestUnitTestGenerator:
             with patch.object(generator.ai_caller, 'call_model') as mock_call:
                 mock_call.side_effect = [
                     ("test_headers_indentation: 4", 10, 10),
-                    ("relevant_line_number_to_insert_tests_after: 100\nrelevant_line_number_to_insert_imports_after: 10\ntesting_framework: pytest", 10, 10)
+                    ("relevant_line_number_to_insert_tests_after: 100\nrelevant_line_number_to_insert_imports_after: 10\ntesting_framework: pytest", 10, 10),
+                    
                 ]
                 
                 generator.initial_test_suite_analysis()
