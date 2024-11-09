@@ -494,7 +494,7 @@ class TestCoverageProcessor:
 
     def test_parse_coverage_report_jacoco_with_feature_flag(self, mocker):
         mock_parse_jacoco = mocker.patch(
-            "cover_agent.CoverageProcessor.CoverageProcessor.parse_coverage_report_jacoco", d
+            "cover_agent.CoverageProcessor.CoverageProcessor.parse_coverage_report_jacoco",
             return_value=([], [], 0.0),
         )
         processor = CoverageProcessor(
