@@ -160,9 +160,6 @@ class TestUnitTestGenerator:
                 # While this is not a valid YAML, the function will return the original string (for better or for worse).
                 assert result =="This is not YAML"
 
-    def test_extract_error_message_with_prompt_builder(self):
-        with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as temp_source_file:
-                assert result == "This is not YAML"
 
     def test_get_code_language_python(self):
         with tempfile.NamedTemporaryFile(
