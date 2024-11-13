@@ -142,8 +142,8 @@ class CoverAgent:
 
         # Run initial test suite analysis
         self.test_validator.initial_test_suite_analysis()
-        failed_test_runs = self.test_validator.get_coverage()
-        self.test_gen.build_prompt(failed_test_runs)
+        failed_test_runs, language, test_framework, coverage_report = self.test_validator.get_coverage()
+        self.test_gen.build_prompt(failed_test_runs, language, test_framework, coverage_report)
 
         # Loop until desired coverage is reached or maximum iterations are met
         while (
@@ -162,7 +162,7 @@ class CoverAgent:
             self.logger.info(f"Desired Coverage: {self.test_validator.desired_coverage}%")
 
             # Generate new tests
-            generated_tests_dict = self.test_gen.generate_tests(failed_test_runs)
+            generated_tests_dict = self.test_gen.generate_tests(failed_test_runs, language, test_framework, coverage_report)
 
             # Loop through each new test and validate it
             for generated_test in generated_tests_dict.get("new_tests", []):

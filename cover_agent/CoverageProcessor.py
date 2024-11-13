@@ -102,7 +102,7 @@ class CoverageProcessor:
                     return self.parse_coverage_report_lcov()
                 elif self.coverage_type == "jacoco":
                     return self.parse_coverage_report_jacoco()
-                elif self.coverage_type == "json_diff":
+                elif self.coverage_type == "diff_cover_json":
                     return self.parse_json_diff_coverage_report()
                 else:
                     raise ValueError(f"Unsupported coverage report type: {self.coverage_type}")

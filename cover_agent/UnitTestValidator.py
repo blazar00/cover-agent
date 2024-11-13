@@ -85,7 +85,7 @@ class UnitTestValidator:
 
         # Override covertype to be 'diff' if diff_coverage is enabled
         if self.diff_coverage:
-            self.coverage_type = "json_diff"
+            self.coverage_type = "diff_cover_json"
             self.diff_coverage_report_name = "diff-cover-report.json"
             self.diff_cover_report_path = f"{self.test_command_dir}/{self.diff_coverage_report_name}"
             self.logger.info(f"Diff coverage enabled. Using coverage report: {self.diff_cover_report_path}")
@@ -122,7 +122,7 @@ class UnitTestValidator:
         """
         # Run coverage and build the prompt
         self.run_coverage()
-        return self.failed_test_runs
+        return self.failed_test_runs, self.language, self.testing_framework, self.code_coverage_report
     
     def get_code_language(self, source_file_path):
         """
@@ -301,9 +301,7 @@ class UnitTestValidator:
             self.logger.info(
                 f"Initial coverage: {round(self.current_coverage * 100, 2)}%"
             )
-            self.logger.info(
-                f"Initial coverage percentages: {self.last_coverage_percentages}"
-            )
+            
         except AssertionError as error:
             # Handle the case where the coverage report does not exist or was not updated after the test command
             self.logger.error(f"Error in coverage processing: {error}")
