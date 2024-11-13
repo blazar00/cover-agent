@@ -123,7 +123,9 @@ class TestCoverAgent:
                     model="openai/test-model",
                     api_base="openai/test-api",
                     use_report_coverage_feature_flag=False,
-                    log_db_path=""
+                    log_db_path="",
+                    diff_coverage=False,
+                    branch="main"
                 )
 
                 with pytest.raises(AssertionError) as exc_info:
@@ -160,7 +162,9 @@ class TestCoverAgent:
                     model="openai/test-model",
                     api_base="openai/test-api",
                     use_report_coverage_feature_flag=False,
-                    log_db_path=""
+                    log_db_path="",
+                    diff_coverage=False,
+                    branch="main"
                 )
 
                 with pytest.raises(AssertionError) as exc_info:
@@ -203,12 +207,15 @@ class TestCoverAgent:
                     use_report_coverage_feature_flag=False,
                     log_db_path="",
                     run_tests_multiple_times=False,
-                    strict_coverage=True
+                    strict_coverage=True,
+                    diff_coverage=False,
+                    branch="main"
                 )
                 # Mock the methods used in run
                 validator = mock_unit_test_validator.return_value
                 validator.current_coverage = 0.5  # below desired coverage
                 validator.desired_coverage = 90
+                validator.get_coverage.return_value = [{}, "python", "pytest", ""]
                 generator = mock_unit_test_generator.return_value
                 generator.generate_tests.return_value = {"new_tests": [{}]}
                 agent = CoverAgent(args)
