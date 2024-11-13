@@ -123,24 +123,3 @@ async def echo(message: str):
     Returns the same message that is sent to it.
     """
     return {"message": message}
-
-
-@app.get("/current-time")
-async def current_time():
-    """
-    Returns the current time in ISO format.
-    """
-    return {"time": datetime.now().isoformat()}
-
-
-@app.get("/is-prime/{number}")
-async def is_prime(number: int):
-    """
-    Check if a number is prime.
-    """
-    if number < 2:
-        return {"is_prime": False}
-    for i in range(2, int(math.sqrt(number)) + 1):
-        if number % i == 0:
-            return {"is_prime": False}
-    return {"is_prime": True}
