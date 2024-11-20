@@ -1,0 +1,7 @@
+<phpunit>
+    <coverage>
+        <report>
+            <cobertura outputFile="cobertura.xml"/>
+        </report>
+    </coverage>
+</phpunit>

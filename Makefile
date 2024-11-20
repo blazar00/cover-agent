@@ -5,7 +5,10 @@ SITE_PACKAGES=$(shell python -c "import wandb, os; print(os.path.dirname(wandb._
 
 # Run unit tests with Pytest
 test:
-	poetry run pytest --junitxml=testLog.xml --cov=cover_agent --cov-report=xml:cobertura.xml --cov-report=term --cov-fail-under=65 --log-cli-level=INFO
+	poetry run pytest --junitxml=testLog.xml --cov=cover_agent --cov-report=xml:cobertura.xml --cov-report=term --cov-fail-under=65 --log-cli-level=INFO --branch
+
+coverage:
+	poetry run pytest --cov=cover_agent --cov-report=html --cov-fail-under=65 --log-cli-level=INFO --branch
 
 # Use Python Black to format python files
 format:
@@ -26,6 +29,7 @@ installer:
 		--add-data "cover_agent/settings/configuration.toml:." \
 		--add-data "cover_agent/settings/language_extensions.toml:." \
 		--add-data "cover_agent/settings/test_generation_prompt.toml:." \
+		--add-data "cover_agent/settings/adapt_test_command_for_a_single_test_via_ai.toml:." \
 		--add-data "$(SITE_PACKAGES)/vendor:wandb/vendor" \
 		--hidden-import=tiktoken_ext.openai_public \
 		--hidden-import=tiktoken_ext \
